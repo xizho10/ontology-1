@@ -31,6 +31,7 @@ import (
 	"github.com/ontio/ontology/core/types"
 	"github.com/ontio/ontology/errors"
 	"github.com/ontio/ontology/smartcontract/states"
+	"fmt"
 )
 
 const (
@@ -165,8 +166,12 @@ func (this *NeoVmService) Invoke() ([]byte, error) {
 			if err := c.Deserialize(engine.Context.OpReader.Reader()); err != nil {
 				return nil, errors.NewDetailErr(err, errors.ErrNoCode, "[NeoVmService] get contract parameters error!")
 			}
-			if _,err := this.ContextRef.AppCall(c.Address, c.Method, c.Code, c.Args); err != nil {
+			result,err := this.ContextRef.AppCall(c.Address, c.Method, c.Code, c.Args); if err != nil {
 				return nil, errors.NewDetailErr(err, errors.ErrNoCode, "[NeoVmService] service app call error!")
+			}
+			fmt.Println("result: ", result)
+			if len(result) != 0 {
+				vm.PushData(engine, result)
 			}
 		default:
 			if err := engine.StepInto(); err != nil {

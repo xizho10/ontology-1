@@ -83,6 +83,7 @@ func pushSmartCodeEvent(v interface{}) {
 				txhash := v.TxHash
 				evts = append(evts, bcomn.NotifyEventInfo{common.ToHexString(txhash[:]), v.ContractAddress.ToHexString(), v.States})
 			}
+			log.Error(evts)
 			pushEvent(rs.TxHash, rs.Error, rs.Action, evts)
 		case *event.LogEventArgs:
 			type logEventArgs struct {

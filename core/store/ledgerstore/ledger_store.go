@@ -917,6 +917,8 @@ func (this *LedgerStoreImp) PreExecuteContract(tx *types.Transaction) (interface
 	result, err := sc.Execute(); if err != nil {
 		return nil, err
 	}
+	fmt.Println("Code:", common.ToHexString(ctx.Code.Code))
+	fmt.Println("ContractAddress:", ctx.ContractAddress.ToHexString())
 	fmt.Println("result:", result)
 	return common.ToHexString(result), nil
 }

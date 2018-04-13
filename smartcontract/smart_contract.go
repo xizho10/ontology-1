@@ -114,10 +114,10 @@ func (this *SmartContract) Execute() ([]byte, error) {
 		}
 	case stypes.NEOVM:
 		service := neovm.NewNeoVmService(this.Config.Store, this.Config.DBCache, this.Config.Tx, this.Config.Time, this)
-		if err := service.Invoke(); err != nil {
-			//fmt.Println("execute neovm error:", err)
+		result, err := service.Invoke(); if err != nil {
 			return nil, err
 		}
+		return result, nil
 	case stypes.WASMVM:
 		service := wasmvm.NewWasmVmService(this.Config.Store, this.Config.DBCache, this.Config.Tx, this.Config.Time, this)
 		result, err := service.Invoke()
@@ -152,7 +152,7 @@ func (this *SmartContract) AppCall(address common.Address, method string, codes,
 		}
 		code = bf.Bytes()
 	case stypes.NEOVM:
-		code, err := this.loadCode(address, codes)
+		c, err := this.loadCode(address, codes)
 		if err != nil {
 			return nil, err
 		}
@@ -162,7 +162,7 @@ func (this *SmartContract) AppCall(address common.Address, method string, codes,
 			build.EmitPushByteArray([]byte(method))
 		}
 		temp = append(args, build.ToArray()...)
-		code = append(temp, code...)
+		code = append(temp, c...)
 	case stypes.WASMVM:
 		bf := new(bytes.Buffer)
 		c := states.Contract{

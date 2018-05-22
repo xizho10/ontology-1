@@ -37,12 +37,10 @@ const (
 type VerifyStage int
 
 const (
-	_ VerifyStage = iota
-	UnVerify
-	PassStateless
-	PassStateful
-	Verified
-	Invalid
+	Pending  VerifyStage = 0
+	Checking VerifyStage = 1
+	Passed   VerifyStage = 2
+	Invalid  VerifyStage = 3
 )
 
 // VerifyTxResult returns a single transaction's verified result.

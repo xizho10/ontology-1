@@ -48,15 +48,13 @@ func (self *txpool) checkPassed(rsp *vtypes.VerifyTxRsp) (bool, *ttypes.TxEntry)
 	}
 	if !txEntry.PassStateless && rsp.VerifyType == vtypes.Stateless {
 		txEntry.PassStateless = true
-		txEntry.Stage = ttypes.PassStateless
 	} else if !txEntry.PassStateful && rsp.VerifyType == vtypes.Stateful {
 		txEntry.PassStateful = true
-		txEntry.Stage = ttypes.PassStateful
 		txEntry.VerifyHeight = rsp.Height
 	}
 
 	if txEntry.PassStateless && txEntry.PassStateful {
-		txEntry.Stage = ttypes.Verified
+		txEntry.Stage = ttypes.Passed
 	} else {
 		return false, nil
 	}
@@ -72,7 +70,7 @@ func (self *txpool) checkPassed(rsp *vtypes.VerifyTxRsp) (bool, *ttypes.TxEntry)
 		txEntry.Gas,
 		txEntry.PassStateful,
 		txEntry.PassStateless,
-		ttypes.Verified,
+		ttypes.Passed,
 		txEntry.HttpSender,
 		0,
 		txEntry.VerifyHeight,
@@ -115,7 +113,7 @@ func (self *txpool) putTransaction(tx *ctypes.Transaction, httpSender bool) *tty
 		HttpSender:    httpSender,
 		PassStateful:  false,
 		PassStateless: false,
-		Stage:         ttypes.UnVerify,
+		Stage:         ttypes.Pending,
 	}
 	self.txEntrys[tx.Hash()] = ptx
 	return ptx
@@ -137,7 +135,7 @@ func (self *txpool) getVerifyBlockTxsState(txs []*ctypes.Transaction,
 		if txEntry == nil {
 			continue
 		}
-		if txEntry.Stage < ttypes.Verified {
+		if txEntry.Stage < ttypes.Passed {
 			unVerifiedTxs = append(unVerifiedTxs, tx)
 			continue
 		}
@@ -162,7 +160,7 @@ func (self *txpool) getVerifiedTransaction(hash common.Uint256) *ttypes.TxEntry 
 	if txEntry == nil {
 		return nil
 	}
-	if txEntry.Stage != ttypes.Verified {
+	if txEntry.Stage != ttypes.Passed {
 		return nil
 	}
 	newEntry := &ttypes.TxEntry{
@@ -193,7 +191,9 @@ func (self *txpool) appendCheckingStateless(tx *ctypes.Transaction) bool {
 	if txEntry == nil {
 		txEntry = self.putTransaction(tx, false)
 	}
-	txEntry.Stage = ttypes.UnVerify
+	txEntry.PassStateless = false
+	txEntry.PassStateful = false
+	txEntry.Stage = ttypes.Checking
 	txEntry.TimeStamp = time.Now().Unix()
 	self.checking = append(self.checking, txEntry)
 	self.numChecking++
@@ -212,7 +212,7 @@ func (self *txpool) appendCheckingStateful(tx *ctypes.Transaction) bool {
 		txEntry.Gas,
 		false,
 		true,
-		ttypes.PassStateless,
+		ttypes.Checking,
 		txEntry.HttpSender,
 		time.Now().Unix(),
 		txEntry.VerifyHeight,
@@ -249,7 +249,7 @@ func (self *txpool) takeVerifiedTransactions(byCount bool, height uint32) ([]*tt
 				txEntry.Gas,
 				false,
 				true,
-				ttypes.PassStateless,
+				ttypes.Checking,
 				txEntry.HttpSender,
 				0,
 				txEntry.VerifyHeight,

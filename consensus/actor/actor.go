@@ -27,22 +27,22 @@ import (
 	"github.com/ontio/ontology/core/types"
 	ontErrors "github.com/ontio/ontology/errors"
 	netActor "github.com/ontio/ontology/p2pserver/actor/server"
-	txpool "github.com/ontio/ontology/txnpool/common"
+	txpool "github.com/ontio/ontology/txnpool/types"
 )
 
 type TxPoolActor struct {
 	Pool *actor.PID
 }
 
-func (self *TxPoolActor) GetTxnPool(byCount bool, height uint32) []*txpool.TXEntry {
-	poolmsg := &txpool.GetTxnPoolReq{ByCount: byCount, Height: height}
+func (self *TxPoolActor) GetTxnPool(byCount bool, height uint32) []*txpool.TxEntry {
+	poolmsg := &txpool.GetVerifiedTxnFromPoolReq{ByCount: byCount, Height: height}
 	future := self.Pool.RequestFuture(poolmsg, time.Second*10)
 	entry, err := future.Result()
 	if err != nil {
 		return nil
 	}
 
-	txs := entry.(*txpool.GetTxnPoolRsp).TxnPool
+	txs := entry.(*txpool.GetVerifiedTxnFromPoolRsp).TxnPool
 	return txs
 }
 
@@ -54,10 +54,10 @@ func (self *TxPoolActor) VerifyBlock(txs []*types.Transaction, height uint32) er
 		return err
 	}
 
-	txentry := entry.(*txpool.VerifyBlockRsp).TxnPool
+	txentry := entry.(*txpool.VerifyBlockRsp).TxResults
 	for _, entry := range txentry {
-		if entry.ErrCode != ontErrors.ErrNoError {
-			return errors.New(entry.ErrCode.Error())
+		if entry.VerifyResult.ErrCode != ontErrors.ErrNoError {
+			return errors.New(entry.VerifyResult.ErrCode.Error())
 		}
 	}
 

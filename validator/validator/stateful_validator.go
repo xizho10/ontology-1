@@ -16,7 +16,7 @@
  * along with The ontology.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package stateful
+package validator
 
 import (
 	"reflect"
@@ -28,44 +28,38 @@ import (
 	"github.com/ontio/ontology/errors"
 	"github.com/ontio/ontology/validator/db"
 	vatypes "github.com/ontio/ontology/validator/types"
+	//"fmt"
 )
 
-// Validator is an interface for tx validation actor
-type Validator interface {
-	Register(poolId *actor.PID)
-	UnRegister(poolId *actor.PID)
-	VerifyType() vatypes.VerifyType
-}
-
-type validator struct {
-	pid       *actor.PID
-	id        string
+type StatefulValidator struct {
+	vatypes.ValidatorActor
 	bestBlock db.BestBlock
 }
 
 // NewValidator returns Validator for stateful check of tx
-func NewValidator(id string) (Validator, error) {
+func NewStatefulValidator(id string) (vatypes.Validator, error) {
 
-	validator := &validator{id: id}
+	validator := &StatefulValidator{}
+	validator.Id = id
 	props := actor.FromProducer(func() actor.Actor {
 		return validator
 	})
 
 	pid, err := actor.SpawnNamed(props, id)
-	validator.pid = pid
+	validator.Pid = pid
 	return validator, err
 }
 
-func (self *validator) Receive(context actor.Context) {
+func (self *StatefulValidator) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
 	case *actor.Started:
-		log.Info("stateful-validator: started and be ready to receive txn")
+		log.Info("statefull-validator: started and be ready to receive txn")
 	case *actor.Stopping:
-		log.Info("stateful-validator: stopping")
+		log.Info("statefull-validator: stopping")
 	case *actor.Restarting:
-		log.Info("stateful-validator: restarting")
-	case *vatypes.CheckTx:
-		log.Debugf("stateful-validator: receive tx %x", msg.Tx.Hash())
+		log.Info("statefull-validator: restarting")
+	case *vatypes.VerifyTxReq:
+		log.Debugf("statefull-validator: receive tx %x", msg.Tx.Hash())
 		sender := context.Sender()
 		height := ledger.DefLedger.GetCurrentBlockHeight()
 
@@ -79,17 +73,16 @@ func (self *validator) Receive(context actor.Context) {
 		} else if exist {
 			errCode = errors.ErrDuplicatedTx
 		}
-
-		response := &vatypes.CheckResponse{
-			WorkerId: msg.WorkerId,
-			Type:     self.VerifyType(),
-			Hash:     msg.Tx.Hash(),
-			Height:   height,
-			ErrCode:  errCode,
+		//fmt.Println(self.Id, " recv VerifyTxReq")
+		response := &vatypes.VerifyTxRsp{
+			VerifyType: self.VerifyType(),
+			Hash:       msg.Tx.Hash(),
+			Height:     height,
+			ErrCode:    errCode,
 		}
 
 		sender.Tell(response)
-	case *vatypes.UnRegisterAck:
+	case *vatypes.UnRegisterValidatorRsp:
 		context.Self().Stop()
 	case *types.Block:
 
@@ -101,25 +94,25 @@ func (self *validator) Receive(context actor.Context) {
 		//}
 
 	default:
-		log.Info("stateful-validator: unknown msg ", msg, "type", reflect.TypeOf(msg))
+		log.Info("statefull-validator: unknown msg ", msg, "type", reflect.TypeOf(msg))
 	}
 
 }
 
-func (self *validator) VerifyType() vatypes.VerifyType {
+func (self *StatefulValidator) VerifyType() vatypes.VerifyType {
 	return vatypes.Stateful
 }
 
-func (self *validator) Register(poolId *actor.PID) {
-	poolId.Tell(&vatypes.RegisterValidator{
-		Sender: self.pid,
-		Type:   self.VerifyType(),
-		Id:     self.id,
+func (self *StatefulValidator) Register(poolId *actor.PID) {
+	poolId.Tell(&vatypes.RegisterValidatorReq{
+		Validator: self.Pid,
+		Type:      self.VerifyType(),
+		Id:        self.Id,
 	})
 }
 
-func (self *validator) UnRegister(poolId *actor.PID) {
-	poolId.Tell(&vatypes.UnRegisterValidator{
-		Id: self.id,
+func (self *StatefulValidator) UnRegister(poolId *actor.PID) {
+	poolId.Tell(&vatypes.UnRegisterValidatorReq{
+		Id: self.Id,
 	})
 }

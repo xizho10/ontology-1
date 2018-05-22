@@ -27,7 +27,7 @@ import (
 	"github.com/ontio/ontology/core/types"
 	"github.com/ontio/ontology/errors"
 	p2pcommon "github.com/ontio/ontology/p2pserver/common"
-	tc "github.com/ontio/ontology/txnpool/common"
+	tc "github.com/ontio/ontology/txnpool/types"
 )
 
 const txnPoolReqTimeout = p2pcommon.ACTOR_TIMEOUT * time.Second
@@ -44,9 +44,9 @@ func AddTransaction(transaction *types.Transaction) {
 		log.Error("p2p tx pool pid is nil")
 		return
 	}
-	txReq := &tc.TxReq{
-		Tx:     transaction,
-		Sender: tc.NetSender,
+	txReq := &tc.AppendTxReq{
+		Tx:         transaction,
+		HttpSender: false,
 	}
 	txnPoolPid.Tell(txReq)
 }
@@ -57,11 +57,11 @@ func GetTransaction(hash common.Uint256) (*types.Transaction, error) {
 		log.Error("p2p tx pool pid is nil")
 		return nil, errors.NewErr("p2p tx pool pid is nil")
 	}
-	future := txnPoolPid.RequestFuture(&tc.GetTxnReq{Hash: hash}, txnPoolReqTimeout)
+	future := txnPoolPid.RequestFuture(&tc.GetVerifiedTxFromPoolReq{Hash: hash}, txnPoolReqTimeout)
 	result, err := future.Result()
 	if err != nil {
 		log.Error(errors.NewErr("net_server GetTransaction ERROR: "), err)
 		return nil, err
 	}
-	return result.(tc.GetTxnRsp).Txn, nil
+	return result.(tc.GetVerifiedTxFromPoolRsp).Txn, nil
 }

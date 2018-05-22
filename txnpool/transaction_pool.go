@@ -86,7 +86,7 @@ type TxPool struct {
 	//pending []*types.Transaction   // Transactions which have not been scheduled to verify yet
 	validators [2]struct { // 1: stateless, 2: stateful
 		cursor    int
-		validator []*vt.RegisterValidator
+		validator []*vt.RegisterValidatorReq
 	}
 }
 
@@ -140,7 +140,7 @@ func (self *TxPool) addStageNum(stage VerifyStage, val int) {
 	}
 }
 
-func (self *TxPool) handleVerifyResponse(rep *vt.CheckResponse) {
+func (self *TxPool) handleVerifyResponse(rep *vt.VerifyTxRsp) {
 	hash := rep.Hash
 	tx, ok := self.txs[hash]
 	if ok == false {
@@ -159,7 +159,7 @@ func (self *TxPool) handleVerifyResponse(rep *vt.CheckResponse) {
 		return
 	}
 
-	if rep.Type == vt.Stateless {
+	if rep.VerifyType == vt.Stateless {
 		tx.PassStateless = true
 	} else {
 		tx.PassStateful = true
@@ -200,7 +200,7 @@ func (self *TxPool) handleVerifyTransaction(tx *types.Transaction) error {
 	}
 
 	entry := &TxEntry{
-		Tx:  tx,
+		Tx: tx,
 	}
 
 	self.txs[tx.Hash()] = entry

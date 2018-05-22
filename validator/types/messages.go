@@ -25,36 +25,6 @@ import (
 	"github.com/ontio/ontology/errors"
 )
 
-// message
-type RegisterValidator struct {
-	Sender *actor.PID
-	Type   VerifyType
-	Id     string
-}
-
-type UnRegisterValidator struct {
-	Id   string
-	Type VerifyType
-}
-
-type UnRegisterAck struct {
-	Id   string
-	Type VerifyType
-}
-
-type CheckTx struct {
-	WorkerId uint8
-	Tx       types.Transaction
-}
-
-type CheckResponse struct {
-	WorkerId uint8
-	Type     VerifyType
-	Hash     common.Uint256
-	Height   uint32
-	ErrCode  errors.ErrCode
-}
-
 // VerifyType of validator
 type VerifyType uint8
 
@@ -62,3 +32,46 @@ const (
 	Stateless VerifyType = iota
 	Stateful  VerifyType = iota
 )
+
+// message
+type RegisterValidatorReq struct {
+	Validator *actor.PID
+	Type      VerifyType
+	Id        string
+}
+
+type UnRegisterValidatorReq struct {
+	Id         string
+	VerifyType VerifyType
+}
+
+type UnRegisterValidatorRsp struct {
+	Id         string
+	VerifyType VerifyType
+}
+
+type VerifyTxReq struct {
+	Tx types.Transaction
+}
+
+type VerifyTxRsp struct {
+	VerifyType VerifyType
+	Hash       common.Uint256
+	Height     uint32
+	ErrCode    errors.ErrCode
+}
+
+// Validator wraps validator actor's pid
+type Validator interface {
+	// Register send a register message to poolId
+	Register(poolId *actor.PID)
+	// UnRegister send an unregister message to poolId
+	UnRegister(poolId *actor.PID)
+	// VerifyType returns the type of validator
+	VerifyType() VerifyType
+}
+
+type ValidatorActor struct {
+	Pid *actor.PID
+	Id  string
+}

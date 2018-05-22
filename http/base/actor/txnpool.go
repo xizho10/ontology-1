@@ -27,84 +27,86 @@ import (
 	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/core/types"
 	ontErrors "github.com/ontio/ontology/errors"
-	tcomn "github.com/ontio/ontology/txnpool/common"
+	ttypes "github.com/ontio/ontology/txnpool/types"
 )
 
-var txnPid *actor.PID
+//var txnPid *actor.PID
 var txnPoolPid *actor.PID
 
-func SetTxPid(actr *actor.PID) {
-	txnPid = actr
-}
+//func SetTxPid(actr *actor.PID) {
+//	txnPid = actr
+//}
 func SetTxnPoolPid(actr *actor.PID) {
 	txnPoolPid = actr
 }
 func AppendTxToPool(txn *types.Transaction) ontErrors.ErrCode {
-	txReq := &tcomn.TxReq{
-		Tx:     txn,
-		Sender: tcomn.HttpSender,
+	txReq := &ttypes.AppendTxReq{
+		Tx:         txn,
+		HttpSender: true,
 	}
-	txnPid.Tell(txReq)
+	txnPoolPid.Tell(txReq)
 	return ontErrors.ErrNoError
 }
 
-func GetTxsFromPool(byCount bool) map[common.Uint256]*types.Transaction {
-	future := txnPoolPid.RequestFuture(&tcomn.GetTxnPoolReq{ByCount: byCount}, REQ_TIMEOUT*time.Second)
+func GetTxsFromPool(byCount bool) (map[common.Uint256]*types.Transaction, uint64) {
+	future := txnPoolPid.RequestFuture(&ttypes.GetVerifiedTxnFromPoolReq{ByCount: byCount}, REQ_TIMEOUT*time.Second)
 	result, err := future.Result()
 	if err != nil {
 		log.Errorf(ERR_ACTOR_COMM, err)
-		return nil
+		return nil, 0
 	}
-	txpool, ok := result.(*tcomn.GetTxnPoolRsp)
+	txpool, ok := result.(*ttypes.GetVerifiedTxnFromPoolRsp)
 	if !ok {
-		return nil
+		return nil, 0
 	}
 	txMap := make(map[common.Uint256]*types.Transaction)
+	var networkFeeSum uint64
 	for _, v := range txpool.TxnPool {
 		txMap[v.Tx.Hash()] = v.Tx
+		networkFeeSum += v.Gas
 	}
-	return txMap
+	return txMap, networkFeeSum
 
 }
 
-func GetTxFromPool(hash common.Uint256) (tcomn.TXEntry, error) {
+func GetTxFromPool(hash common.Uint256) (ttypes.TxEntry, error) {
 
-	future := txnPid.RequestFuture(&tcomn.GetTxnReq{hash}, REQ_TIMEOUT*time.Second)
+	future := txnPoolPid.RequestFuture(&ttypes.GetVerifiedTxFromPoolReq{hash}, REQ_TIMEOUT*time.Second)
 	result, err := future.Result()
 	if err != nil {
 		log.Errorf(ERR_ACTOR_COMM, err)
-		return tcomn.TXEntry{}, err
+		return ttypes.TxEntry{}, err
 	}
-	rsp, ok := result.(*tcomn.GetTxnRsp)
+	rsp, ok := result.(*ttypes.GetVerifiedTxFromPoolRsp)
 	if !ok {
-		return tcomn.TXEntry{}, errors.New("fail")
+		return ttypes.TxEntry{}, errors.New("fail")
 	}
 	if rsp.Txn == nil {
-		return tcomn.TXEntry{}, errors.New("fail")
+		return ttypes.TxEntry{}, errors.New("fail")
 	}
 
-	future = txnPid.RequestFuture(&tcomn.GetTxnStatusReq{hash}, REQ_TIMEOUT*time.Second)
+	future = txnPoolPid.RequestFuture(&ttypes.GetTxVerifyResultReq{hash}, REQ_TIMEOUT*time.Second)
 	result, err = future.Result()
 	if err != nil {
 		log.Errorf(ERR_ACTOR_COMM, err)
-		return tcomn.TXEntry{}, err
+		return ttypes.TxEntry{}, err
 	}
-	txStatus, ok := result.(*tcomn.GetTxnStatusRsp)
+	txStatus, ok := result.(*ttypes.GetTxVerifyResultRsp)
 	if !ok {
-		return tcomn.TXEntry{}, errors.New("fail")
+		return ttypes.TxEntry{}, errors.New("fail")
 	}
-	txnEntry := tcomn.TXEntry{rsp.Txn, txStatus.TxStatus}
+	txnEntry := ttypes.TxEntry{Tx: rsp.Txn, VerifyHeight: txStatus.TxEntry.VerifyHeight}
 	return txnEntry, nil
 }
 
-func GetTxnCnt() ([]uint64, error) {
-	future := txnPid.RequestFuture(&tcomn.GetTxnStats{}, REQ_TIMEOUT*time.Second)
+func GetTxCount() ([]uint64, error) {
+	future := txnPoolPid.RequestFuture(&ttypes.GetTxVerifyResultStaticsReq{}, REQ_TIMEOUT*time.Second)
 	result, err := future.Result()
 	if err != nil {
 		log.Errorf(ERR_ACTOR_COMM, err)
 		return []uint64{}, err
 	}
-	txnCnt, ok := result.(*tcomn.GetTxnStatsRsp)
+	txnCnt, ok := result.(*ttypes.GetTxVerifyResultStaticsRsp)
 	if !ok {
 		return []uint64{}, errors.New("fail")
 	}

@@ -133,7 +133,7 @@ func GetConnectionCount(params []interface{}) map[string]interface{} {
 
 func GetRawMemPool(params []interface{}) map[string]interface{} {
 	txs := []*bcomn.Transactions{}
-	txpool := bactor.GetTxsFromPool(false)
+	txpool, _ := bactor.GetTxsFromPool(false)
 	for _, t := range txpool {
 		txs = append(txs, bcomn.TransArryByteToHexString(t))
 	}
@@ -164,9 +164,9 @@ func GetMemPoolTxState(params []interface{}) map[string]interface{} {
 		}
 		tran := bcomn.TransArryByteToHexString(txEntry.Tx)
 		attrs := []bcomn.TXNAttrInfo{}
-		for _, t := range txEntry.Attrs {
-			attrs = append(attrs, bcomn.TXNAttrInfo{t.Height, int(t.Type), int(t.ErrCode)})
-		}
+		//for _, t := range txEntry.Attrs {
+		//	attrs = append(attrs, bcomn.TXNAttrInfo{t.Height, int(t.Type), int(t.ErrCode)})
+		//}
 		info := bcomn.TXNEntryInfo{*tran, int64(txEntry.Tx.GasPrice), attrs}
 		return responseSuccess(info)
 	default:

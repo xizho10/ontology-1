@@ -51,9 +51,9 @@ import (
 	"github.com/ontio/ontology/p2pserver"
 	netreqactor "github.com/ontio/ontology/p2pserver/actor/req"
 	p2pactor "github.com/ontio/ontology/p2pserver/actor/server"
-	"github.com/ontio/ontology/txnpool"
-	poolsender "github.com/ontio/ontology/txnpool/actor/send"
-	ttypes "github.com/ontio/ontology/txnpool/types"
+	"github.com/ontio/ontology/txpool"
+	poolsender "github.com/ontio/ontology/txpool/actor/send"
+	ttypes "github.com/ontio/ontology/txpool/types"
 	"github.com/ontio/ontology/validator/validator"
 	"github.com/urfave/cli"
 )
@@ -233,7 +233,7 @@ func initLedger(ctx *cli.Context) (*ledger.Ledger, error) {
 }
 
 func initTxPool(ctx *cli.Context) (*poolsender.Sender, error) {
-	txPoolServer := txnpool.StartTxnPoolServer()
+	txPoolServer := txpool.StartTxnPoolServer()
 	txPoolActor := txPoolServer.GetPid(ttypes.TxPoolActor)
 	stlValidator, _ := validator.NewStatelessValidator("stateless_validator")
 	stlValidator.Register(txPoolActor)

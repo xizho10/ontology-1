@@ -18,17 +18,17 @@
 
 // Package txnpool privides a function to start micro service txPool for
 // external process
-package txnpool
+package txpool
 
 import (
 	"github.com/ontio/ontology-eventbus/actor"
 	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/events"
 	"github.com/ontio/ontology/events/message"
-	tactor "github.com/ontio/ontology/txnpool/actor"
-	tsend "github.com/ontio/ontology/txnpool/actor/send"
-	"github.com/ontio/ontology/txnpool/pool"
-	ttypes "github.com/ontio/ontology/txnpool/types"
+	tactor "github.com/ontio/ontology/txpool/actor"
+	tsend "github.com/ontio/ontology/txpool/actor/send"
+	"github.com/ontio/ontology/txpool/pool"
+	ttypes "github.com/ontio/ontology/txpool/types"
 )
 
 // startActor starts an actor with the proxy and unique id,

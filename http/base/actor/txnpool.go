@@ -27,7 +27,7 @@ import (
 	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/core/types"
 	ontErrors "github.com/ontio/ontology/errors"
-	ttypes "github.com/ontio/ontology/txnpool/types"
+	ttypes "github.com/ontio/ontology/txpool/types"
 )
 
 //var txnPid *actor.PID

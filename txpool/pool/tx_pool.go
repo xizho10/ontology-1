@@ -5,7 +5,7 @@ import (
 	"github.com/ontio/ontology/common/config"
 	"github.com/ontio/ontology/common/log"
 	ctypes "github.com/ontio/ontology/core/types"
-	ttypes "github.com/ontio/ontology/txnpool/types"
+	ttypes "github.com/ontio/ontology/txpool/types"
 	vtypes "github.com/ontio/ontology/validator/types"
 	"time"
 	//"fmt"

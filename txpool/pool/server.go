@@ -26,8 +26,8 @@ import (
 	"github.com/ontio/ontology/common/log"
 	ctypes "github.com/ontio/ontology/core/types"
 	"github.com/ontio/ontology/errors"
-	tsend "github.com/ontio/ontology/txnpool/actor/send"
-	ttypes "github.com/ontio/ontology/txnpool/types"
+	tsend "github.com/ontio/ontology/txpool/actor/send"
+	ttypes "github.com/ontio/ontology/txpool/types"
 	vtypes "github.com/ontio/ontology/validator/types"
 
 	"fmt"

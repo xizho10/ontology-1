@@ -35,7 +35,7 @@ import (
 	"github.com/ontio/ontology/core/types"
 	"github.com/ontio/ontology/events"
 	"github.com/ontio/ontology/events/message"
-	"github.com/ontio/ontology/validator/increment"
+	"github.com/ontio/ontology/validator2/increment"
 )
 
 /*

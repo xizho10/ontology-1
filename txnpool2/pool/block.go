@@ -5,7 +5,7 @@ import (
 	"github.com/ontio/ontology/common"
 	ctypes "github.com/ontio/ontology/core/types"
 	"github.com/ontio/ontology/errors"
-	ttypes "github.com/ontio/ontology/txpool/types"
+	ttypes "github.com/ontio/ontology/txnpool2/types"
 )
 
 type BlockEntry struct {

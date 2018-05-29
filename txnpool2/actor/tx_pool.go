@@ -4,10 +4,10 @@ import (
 	"github.com/ontio/ontology-eventbus/actor"
 	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/events/message"
-	tsend "github.com/ontio/ontology/txpool/actor/send"
-	"github.com/ontio/ontology/txpool/pool"
-	ttypes "github.com/ontio/ontology/txpool/types"
-	vtypes "github.com/ontio/ontology/validator/types"
+	tsend "github.com/ontio/ontology/txnpool2/actor/send"
+	"github.com/ontio/ontology/txnpool2/pool"
+	ttypes "github.com/ontio/ontology/txnpool2/types"
+	vtypes "github.com/ontio/ontology/validator2/types"
 	"reflect"
 )
 

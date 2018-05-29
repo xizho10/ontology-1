@@ -4,8 +4,8 @@ import (
 	"github.com/ontio/ontology-eventbus/actor"
 	"github.com/ontio/ontology/common/log"
 	ctypes "github.com/ontio/ontology/core/types"
-	ttypes "github.com/ontio/ontology/txpool/types"
-	vtypes "github.com/ontio/ontology/validator/types"
+	ttypes "github.com/ontio/ontology/txnpool2/types"
+	vtypes "github.com/ontio/ontology/validator2/types"
 	"sync"
 )
 

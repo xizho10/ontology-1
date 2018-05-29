@@ -44,7 +44,7 @@ import (
 	gover "github.com/ontio/ontology/smartcontract/service/native/governance"
 	"github.com/ontio/ontology/smartcontract/states"
 	stypes "github.com/ontio/ontology/smartcontract/types"
-	"github.com/ontio/ontology/validator/increment"
+	"github.com/ontio/ontology/validator2/increment"
 )
 
 type BftActionType uint8

@@ -26,8 +26,8 @@ import (
 	"github.com/ontio/ontology/core/ledger"
 	"github.com/ontio/ontology/core/types"
 	"github.com/ontio/ontology/errors"
-	"github.com/ontio/ontology/validator/db"
-	vatypes "github.com/ontio/ontology/validator/types"
+	"github.com/ontio/ontology/validator2/db"
+	vatypes "github.com/ontio/ontology/validator2/types"
 	//"fmt"
 )
 

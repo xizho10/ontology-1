@@ -26,7 +26,7 @@ import (
 	"github.com/ontio/ontology-eventbus/actor"
 	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/core/validation"
-	vtypes "github.com/ontio/ontology/validator/types"
+	vtypes "github.com/ontio/ontology/validator2/types"
 )
 
 type StatelessValidator struct {

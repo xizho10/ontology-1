@@ -16,7 +16,7 @@
  * along with The ontology.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package txpool
+package txnpool2
 
 import (
 	"errors"
@@ -27,7 +27,7 @@ import (
 	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/core/types"
 	ontErr "github.com/ontio/ontology/errors"
-	vt "github.com/ontio/ontology/validator/types"
+	vt "github.com/ontio/ontology/validator2/types"
 )
 
 var TooManyPendingTxError = errors.New("too many pending tx")

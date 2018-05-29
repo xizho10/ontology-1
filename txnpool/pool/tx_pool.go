@@ -88,13 +88,13 @@ func (self *txpool) removeTransaction(hash common.Uint256) {
 }
 
 func (self *txpool) removeTransactions(txs []*ctypes.Transaction) {
-	//for _, v := range self.txEntrys {
-	//	fmt.Println(v.Tx.Hash())
-	//}
-	//fmt.Println()
 	for _, v := range txs {
 		//fmt.Println(v.Hash())
-		delete(self.txEntrys, v.Hash())
+		txEntry := self.txEntrys[v.Hash()]
+		if txEntry != nil {
+			txEntry.Stage = ttypes.Invalid
+			delete(self.txEntrys, v.Hash())
+		}
 	}
 }
 func (self *txpool) updateTransaction(txEntry *ttypes.TxEntry) {

@@ -2,8 +2,11 @@ package actor
 
 import (
 	"github.com/ontio/ontology-eventbus/actor"
+	"github.com/ontio/ontology/common/config"
 	"github.com/ontio/ontology/common/log"
+	ctypes "github.com/ontio/ontology/core/types"
 	"github.com/ontio/ontology/events/message"
+	"github.com/ontio/ontology/smartcontract/service/neovm"
 	tsend "github.com/ontio/ontology/txnpool2/actor/send"
 	"github.com/ontio/ontology/txnpool2/pool"
 	ttypes "github.com/ontio/ontology/txnpool2/types"
@@ -61,6 +64,19 @@ func (self *TxPoolActor) Receive(context actor.Context) {
 	case *ttypes.AppendTxReq:
 		sender := msg.HttpSender
 		log.Debug("txpool-tx actor Receives tx from ", sender)
+		txn := msg.Tx
+		if txn.GasLimit < config.DefConfig.Common.GasLimit ||
+			txn.GasPrice < config.DefConfig.Common.GasPrice {
+			log.Errorf("handleTransaction: invalid gasLimit %v, gasPrice %v",
+				txn.GasLimit, txn.GasPrice)
+			return
+		}
+
+		if txn.TxType == ctypes.Deploy && txn.GasLimit < neovm.CONTRACT_CREATE_GAS {
+			log.Errorf("handleTransaction: deploy tx invalid gasLimit %v, gasPrice %v",
+				txn.GasLimit, txn.GasPrice)
+			return
+		}
 		self.txPoolServer.HandleAppendTxReq(sender, msg.Tx)
 
 	case *ttypes.GetVerifiedTxFromPoolReq:

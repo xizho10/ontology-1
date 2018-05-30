@@ -93,12 +93,13 @@ func (self *PoolServer) HandleVerifyBlockReq(height uint32, txs []*ctypes.Transa
 	if len(txs) == 0 {
 		return
 	}
-	fmt.Println("HandleVerifyBlockReq=====================", len(txs))
+	fmt.Println("\nHandleVerifyBlockReq=====================", len(txs))
 	verified, unverify, reverify := self.txpool.getVerifyBlockTxsState(txs, height)
 	self.txpool.removeInvalidInPassed()
 	fmt.Println("verifiedTxs:", len(verified))
 	fmt.Println("unverify:", len(unverify))
 	fmt.Println("pending:", self.txpool.numPending)
+	fmt.Println("passed:", self.txpool.numPassed)
 	fmt.Println("reverify:", len(reverify))
 	for _, tx := range unverify {
 		if self.txpool.appendCheckingStateless(tx) {

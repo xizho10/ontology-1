@@ -5,6 +5,7 @@ import (
 	"github.com/ontio/ontology/common"
 	ctypes "github.com/ontio/ontology/core/types"
 	"github.com/ontio/ontology/errors"
+	txpoolcommon "github.com/ontio/ontology/txnpool/common"
 	ttypes "github.com/ontio/ontology/txnpool2/types"
 )
 
@@ -90,9 +91,14 @@ func (self *BlockEntry) send2Consensus() {
 	for _, v := range self.processedTxs {
 		rsp.TxResults = append(rsp.TxResults, v)
 	}
-
+	rsp0 := &txpoolcommon.VerifyBlockRsp{
+		TxnPool: make([]*txpoolcommon.VerifyTxResult, 0, len(self.processedTxs)),
+	}
+	for _, v := range self.processedTxs {
+		rsp0.TxnPool = append(rsp0.TxnPool, &txpoolcommon.VerifyTxResult{v.Height, v.Tx, v.ErrCode})
+	}
 	if self.consusActor != nil {
-		self.consusActor.Tell(rsp)
+		self.consusActor.Tell(rsp0)
 	}
 
 	// Clear the processedTxs for the next block verify req

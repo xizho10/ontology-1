@@ -55,8 +55,13 @@ import (
 	"github.com/ontio/ontology/txnpool"
 	tc "github.com/ontio/ontology/txnpool/common"
 	"github.com/ontio/ontology/txnpool/proc"
+	"github.com/ontio/ontology/txnpool2"
+	tc2 "github.com/ontio/ontology/txnpool2/common"
+	proc2 "github.com/ontio/ontology/txnpool2/proc"
 	"github.com/ontio/ontology/validator/stateful"
 	"github.com/ontio/ontology/validator/stateless"
+	stateful2 "github.com/ontio/ontology/validator2/stateful"
+	stateless2 "github.com/ontio/ontology/validator2/stateless"
 	"github.com/urfave/cli"
 )
 
@@ -141,17 +146,27 @@ func startOntology(ctx *cli.Context) {
 		return
 	}
 	defer ldg.Close()
-	txpool, err := initTxPool(ctx)
+	var txpool *proc.TXPoolServer
+	var txpool2 *proc2.TXPoolServer
+	var txpoolActor *actor.PID
+	if true {
+		txpool2, err = initTxPool2(ctx)
+		txpoolActor = txpool2.GetPID(tc2.TxPoolActor)
+	} else {
+		txpool, err = initTxPool(ctx)
+		txpoolActor = txpool.GetPID(tc.TxPoolActor)
+	}
 	if err != nil {
 		log.Errorf("initTxPool error:%s", err)
 		return
 	}
-	p2pSvr, p2pPid, err := initP2PNode(ctx, acc, txpool)
+	p2pSvr, p2pPid, err := initP2PNode(ctx, acc, txpool, txpool2)
 	if err != nil {
 		log.Errorf("initP2PNode error:%s", err)
 		return
 	}
-	_, err = initConsensus(ctx, p2pPid, txpool, acc)
+
+	_, err = initConsensus(ctx, p2pPid, txpoolActor, acc)
 	if err != nil {
 		log.Errorf("initConsensus error:%s", err)
 		return
@@ -252,7 +267,25 @@ func initTxPool(ctx *cli.Context) (*proc.TXPoolServer, error) {
 	return txPoolServer, nil
 }
 
-func initP2PNode(ctx *cli.Context, acc *account.Account, txpoolSvr *proc.TXPoolServer) (*p2pserver.P2PServer, *actor.PID, error) {
+func initTxPool2(ctx *cli.Context) (*proc2.TXPoolServer, error) {
+
+	txPoolServer, err := txnpool2.StartTxnPoolServer()
+	if err != nil {
+		return nil, fmt.Errorf("Init txpool error:%s", err)
+	}
+	stlValidator, _ := stateless2.NewValidator("stateless_validator")
+	stlValidator.Register(txPoolServer.GetPID(tc2.VerifyRspActor))
+	stfValidator, _ := stateful2.NewValidator("stateful_validator")
+	stfValidator.Register(txPoolServer.GetPID(tc2.VerifyRspActor))
+
+	hserver.SetTxnPoolPid(txPoolServer.GetPID(tc2.TxPoolActor))
+	hserver.SetTxPid(txPoolServer.GetPID(tc2.TxActor))
+
+	log.Infof("TxPool init success")
+	return txPoolServer, nil
+}
+
+func initP2PNode(ctx *cli.Context, acc *account.Account, txpoolSvr *proc.TXPoolServer, txpoolSvr2 *proc2.TXPoolServer) (*p2pserver.P2PServer, *actor.PID, error) {
 	if config.DefConfig.Genesis.ConsensusType == config.CONSENSUS_TYPE_SOLO {
 		return nil, nil, nil
 	}
@@ -268,19 +301,23 @@ func initP2PNode(ctx *cli.Context, acc *account.Account, txpoolSvr *proc.TXPoolS
 	if err != nil {
 		return nil, nil, fmt.Errorf("p2p service start error %s", err)
 	}
-	netreqactor.SetTxnPoolPid(txpoolSvr.GetPID(tc.TxActor))
-	txpoolSvr.RegisterActor(tc.NetActor, p2pPID)
+	if txpoolSvr == nil {
+		netreqactor.SetTxnPoolPid(txpoolSvr2.GetPID(tc2.TxActor))
+		txpoolSvr2.RegisterActor(tc2.NetActor, p2pPID)
+	} else {
+		netreqactor.SetTxnPoolPid(txpoolSvr.GetPID(tc.TxActor))
+		txpoolSvr.RegisterActor(tc.NetActor, p2pPID)
+	}
 	hserver.SetNetServerPID(p2pPID)
 	p2p.WaitForPeersStart()
 	log.Infof("P2P node init success")
 	return p2p, p2pPID, nil
 }
 
-func initConsensus(ctx *cli.Context, p2pPid *actor.PID, txpoolSvr *proc.TXPoolServer, acc *account.Account) (consensus.ConsensusService, error) {
+func initConsensus(ctx *cli.Context, p2pPid *actor.PID, pool *actor.PID, acc *account.Account) (consensus.ConsensusService, error) {
 	if !config.DefConfig.Consensus.EnableConsensus {
 		return nil, nil
 	}
-	pool := txpoolSvr.GetPID(tc.TxPoolActor)
 
 	consensusType := strings.ToLower(config.DefConfig.Genesis.ConsensusType)
 	consensusService, err := consensus.NewConsensusService(consensusType, acc, pool, nil, p2pPid)

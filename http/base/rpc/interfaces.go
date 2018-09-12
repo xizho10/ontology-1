@@ -91,7 +91,7 @@ func GetBlock(params []interface{}) map[string]interface{} {
 //get block height
 func GetBlockCount(params []interface{}) map[string]interface{} {
 	height := bactor.GetCurrentBlockHeight()
-	return responseSuccess(height + 1)
+	return responseSuccess(height)
 }
 
 //get block hash

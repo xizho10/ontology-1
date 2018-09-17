@@ -19,7 +19,9 @@
 package neovm
 
 import (
+	"fmt"
 	"github.com/ontio/ontology/vm/neovm/types"
+	"reflect"
 )
 
 const initStackCap = 16 // to avoid reallocation
@@ -32,6 +34,20 @@ func NewRandAccessStack() *RandomAccessStack {
 	var ras RandomAccessStack
 	ras.e = make([]types.StackItems, 0, initStackCap)
 	return &ras
+}
+
+func (r *RandomAccessStack) Info() {
+	l := len(r.e)
+	fmt.Print("[")
+	for i := 0; i < l; i++ {
+
+		fmt.Print(reflect.TypeOf(r.e[i]))
+		if i < l-1 {
+			fmt.Print(",")
+		}
+	}
+	fmt.Print("]")
+	fmt.Println()
 }
 
 func (r *RandomAccessStack) Count() int {

@@ -28,6 +28,7 @@ import (
 	"syscall"
 	"time"
 
+	"encoding/base64"
 	"github.com/ontio/ontology-crypto/keypair"
 	"github.com/ontio/ontology-eventbus/actor"
 	alog "github.com/ontio/ontology-eventbus/log"
@@ -41,6 +42,7 @@ import (
 	"github.com/ontio/ontology/consensus"
 	"github.com/ontio/ontology/core/genesis"
 	"github.com/ontio/ontology/core/ledger"
+	"github.com/ontio/ontology/core/types"
 	"github.com/ontio/ontology/events"
 	bactor "github.com/ontio/ontology/http/base/actor"
 	hserver "github.com/ontio/ontology/http/base/actor"
@@ -131,7 +133,46 @@ func setupAPP() *cli.App {
 	return app
 }
 
+//{"address":"AVMwbHienJF1koKi5c9XFr7Tbq4es6VyYL","salt":"1DZREybqA1xEfR5EnC7snQ==","label":"my2","type":"A","parameters":{"curve":"P-256"},"scrypt":{"dkLen":64,"n":4096,"p":8,"r":8},"key":"h+Tvl/ZQ4lghYZNzSf/OxQsaR3GXoh61qrC5IkOymM5otm0qheXT1diqpCDeAQJA","algorithm":"ECDSA"}
 func main() {
+	if false {
+		fmt.Println(os.Args)
+		if len(os.Args) != 5 {
+			fmt.Println("please input like: ont.exe key address salt password")
+			fmt.Println("example: ont.exe +UADcReBcLq0pn/2Grmz+UJsKl3ryop8pgRVHbQVgTBfT0lho06Svh4eQLSmC93j  AG9W6c7nNhaiywcyVPgW9hQKvUYQr5iLvk  IfxFV0Fer5LknIyCLP2P2w== 111111")
+			os.Exit(0)
+		}
+		key := os.Args[1]
+		address := os.Args[2]
+		salt := os.Args[3]
+		pwd := os.Args[4]
+		wallet := account.NewWalletData()
+		var keyinfo = new(keypair.ProtectedKey)
+		keyinfo.Address = address
+		keyinfo.EncAlg = "aes-256-gcm"
+		keyinfo.Alg = "ECDSA"
+		//keyinfo.Hash = this.Hash
+		keyinfo.Key, _ = base64.StdEncoding.DecodeString(key)
+		keyinfo.Param = map[string]string{}
+		keyinfo.Param["curve"] = "P-256"
+		keyinfo.Salt, _ = base64.StdEncoding.DecodeString(salt)
+		data := account.AccountData{}
+		data.ProtectedKey = *keyinfo
+		wallet.Scrypt.N = 4096
+		//fmt.Println(data.GetKeyPair())
+		//fmt.Println(common.ToHexString(keyinfo.Salt))
+		prv, err := keypair.DecryptWithCustomScrypt(data.GetKeyPair(), []byte(pwd), wallet.Scrypt)
+		if err != nil {
+			fmt.Println("param eror :", err)
+			os.Exit(0)
+		}
+		fmt.Println("private key: ", common.ToHexString(keypair.SerializePrivateKey(prv)[2:34]))
+		//fmt.Println("WIF: ",common.ToHexString(keypair.SerializePrivateKey(prv)[2:34]))
+		publicKey := prv.Public()
+		addr := types.AddressFromPubKey(publicKey)
+		fmt.Println("address:", addr.ToBase58())
+		os.Exit(0)
+	}
 	if err := setupAPP().Run(os.Args); err != nil {
 		cmd.PrintErrorMsg(err.Error())
 		os.Exit(1)

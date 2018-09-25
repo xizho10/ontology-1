@@ -19,7 +19,7 @@
 package neovm
 
 import (
-	"fmt"
+	//"fmt"
 	"github.com/ontio/ontology/vm/neovm/errors"
 )
 
@@ -113,8 +113,8 @@ func (this *ExecutionEngine) ExecuteOp() (VMState, error) {
 			return FAULT, err
 		}
 	}
-	fmt.Print(this.OpExec.Name, " ")
-	fmt.Println()
+	//fmt.Print(this.OpExec.Name, " ")
+	//fmt.Println()
 	//this.EvaluationStack.Info()
 	return this.OpExec.Exec(this)
 }
